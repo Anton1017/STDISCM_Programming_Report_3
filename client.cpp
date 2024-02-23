@@ -47,6 +47,11 @@ int main() {
     std::getline(std::cin, endPoint);
     std::string message = startPoint + "," + endPoint;
 
+    std::cout << "Enter number of threads: ";
+    std::string numThreads;
+    std::getline(std::cin, numThreads);
+    std::string message = startPoint + "," + endPoint + "," + numThreads;
+
     send(sock, message.c_str(), message.size(),  0);
 
     char buffer[1024] = {0};
