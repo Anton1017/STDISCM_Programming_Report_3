@@ -37,14 +37,21 @@ int main() {
         return 1;
     }
 
+    //User input
+    std::cout << "Enter start point: ";
+    std::string startPoint;
+    std::getline(std::cin, startPoint);
 
-    const char *message = "Hello, Server!";
-    send(sock, message, strlen(message),   0);
+    std::cout << "Enter end point: ";
+    std::string endPoint;
+    std::getline(std::cin, endPoint);
+    std::string message = startPoint + "," + endPoint;
+
+    send(sock, message.c_str(), message.size(),  0);
 
     char buffer[1024] = {0};
-    recv(sock, buffer,   1024,   0);
+    recv(sock, buffer,  1024,  0);
     std::cout << "Server: " << buffer << std::endl;
-
 
     closesocket(sock);
     WSACleanup();
