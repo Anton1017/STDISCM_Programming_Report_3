@@ -1,9 +1,4 @@
-#ifdef __WIN32__
-# include <winsock2.h>
-#else
-# include <sys/socket.h>
-#endif
-
+#include <winsock2.h>
 #include <iostream>
 #include <winsock2.h>
 #include <ws2tcpip.h>
