@@ -1,11 +1,13 @@
 #include <iostream>
 #include <string>
 #include <winsock2.h>
+#include <ws2tcpip.h>
 
 #pragma comment(lib, "ws2_32.lib")
 
-const int PORT = 12345;
+const int PORT = 6900;
 const int BUFFER_SIZE = 1024;
+const char* SERVER_ADDRESS = "127.0.0.1";
 
 int main() {
     char buffer[BUFFER_SIZE] = {0};
@@ -28,6 +30,12 @@ int main() {
 
     // Configure server address
     sockaddr_in serverAddr;
+    if (inet_pton(AF_INET, SERVER_ADDRESS, &(serverAddr.sin_addr.S_un.S_addr)) <=  0) {
+        std::cerr << "inet_pton failed: " << WSAGetLastError() << std::endl;
+        closesocket(serverSocket);
+        WSACleanup();
+        return   1;
+    }
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(PORT);
     serverAddr.sin_addr.s_addr = INADDR_ANY;
@@ -83,29 +91,19 @@ int main() {
             // Split message into start, end, and num threads
             int i = 0;
             std::string temp = "";
+            
+            char* ptr;
+            ptr = strtok(buffer, ",");
+            start = std::stoi(ptr);
+            ptr = strtok(NULL, ",");
+            end = std::stoi(ptr);
+            ptr = strtok(NULL, ",");
+            numThreads = std::stoi(ptr);
 
-            while (buffer[i] != '\0') {
-                if (buffer[i] != ',') {
-                    temp += buffer[i]; 
-                } 
-                else {
-                    switch (i) {
-                        case 0:
-                            start = stoi(temp);
-                            break;
-                        case 1:
-                            end = stoi(temp);
-                            break;
-                        case 2:
-                            numThreads = stoi(temp);
-                            break;
-                        default:
-                            break;
-                    }
-                    temp.clear();
-                }
-                i++;
-            }
+
+            std::cout << "Start: " << start << std::endl;
+            std::cout << "End: " << end << std::endl;
+            std::cout << "Num Threads: " << numThreads << std::endl;
 
             // Check for termination message
             if (std::string(buffer) == "exit") {

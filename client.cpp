@@ -8,9 +8,9 @@ int main() {
 
     WSADATA wsaData;
     int result = WSAStartup(MAKEWORD(2,  2), &wsaData);
-    if (result !=  0) {
+    if (result != 0) {
         std::cerr << "WSAStartup failed: " << result << std::endl;
-        return  1;
+        return 1;
     }
 
     SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -40,7 +40,6 @@ int main() {
     std::cout << "Enter end point: ";
     std::string endPoint;
     std::getline(std::cin, endPoint);
-    std::string message = startPoint + "," + endPoint;
 
     std::cout << "Enter number of threads: ";
     std::string numThreads;
