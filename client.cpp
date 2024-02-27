@@ -33,21 +33,26 @@ int main() {
     }
 
     //User input
-    std::cout << "Enter start point: ";
-    std::string startPoint;
-    std::getline(std::cin, startPoint);
+    std::string temp;
+    while (std::getline(std::cin, temp))
+    {
+        if (temp != "Exit") {
+            std::cout << "Enter start point: ";
+            std::string startPoint;
+            std::getline(std::cin, startPoint);
 
-    std::cout << "Enter end point: ";
-    std::string endPoint;
-    std::getline(std::cin, endPoint);
+            std::cout << "Enter end point: ";
+            std::string endPoint;
+            std::getline(std::cin, endPoint);
 
-    std::cout << "Enter number of threads: ";
-    std::string numThreads;
-    std::getline(std::cin, numThreads);
-    std::string message = startPoint + "," + endPoint + "," + numThreads;
+            std::cout << "Enter number of threads: ";
+            std::string numThreads;
+            std::getline(std::cin, numThreads);
+            std::string message = startPoint + "," + endPoint + "," + numThreads;
 
-    send(sock, message.c_str(), message.size(),  0);
-
+            send(sock, message.c_str(), message.size(),  0);
+        }
+    }
     char buffer[1024] = {0};
     recv(sock, buffer,  1024,  0);
     std::cout << "Server: " << buffer << std::endl;

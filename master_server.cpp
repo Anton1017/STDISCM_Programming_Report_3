@@ -85,7 +85,7 @@ int main() {
                 WSACleanup();
                 return -1;
             }
-
+            
             std::cout << "Message from client: " << buffer << std::endl;
 
             // Split message into start, end, and num threads
@@ -100,13 +100,17 @@ int main() {
             ptr = strtok(NULL, ",");
             numThreads = std::stoi(ptr);
 
-
+            /*
             std::cout << "Start: " << start << std::endl;
             std::cout << "End: " << end << std::endl;
             std::cout << "Num Threads: " << numThreads << std::endl;
+            */
+
+            // Send to slave process
+
 
             // Check for termination message
-            if (std::string(buffer) == "exit") {
+            if (std::string(buffer) == "Exit") {
                 std::cout << "Client sent termination message" << std::endl;
                 break;
             }
