@@ -33,6 +33,7 @@ int main() {
 
     //User input
     std::string temp;
+    char buffer[1024] = {0};
     while (std::getline(std::cin, temp))
     {
         if (temp != "Exit") {
@@ -50,6 +51,7 @@ int main() {
             std::string message = startPoint + "," + endPoint + "," + numThreads;
 
             send(sock, message.c_str(), message.size(),  0);
+
         }
         else {
             send(sock, temp.c_str(), temp.size(),  0);
@@ -57,7 +59,6 @@ int main() {
         }
 
     }
-    char buffer[1024] = {0};
     recv(sock, buffer,  1024,  0);
     std::cout << "Server: " << buffer << std::endl;
 

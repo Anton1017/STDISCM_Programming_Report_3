@@ -2,14 +2,25 @@
 #include <string>
 #include <winsock2.h>
 #include <ws2tcpip.h>
-
+#include <thread>
+#include <stdlib.h>
+#include <mutex>
+#include <vector>
 #pragma comment(lib, "ws2_32.lib")
-
+using namespace std;
 const int PORT = 6900;
 const int BUFFER_SIZE = 1024;
 const char* SERVER_ADDRESS = "127.0.0.1";
 
+bool check_prime(const int &n);
+
+void find_primes_range(int start, int end, int limit, std::vector<int> &primes, mutex &primes_mutex);
+
+void mutualExclusion(int current_num, vector<int> &primes, mutex &primes_mutex);
+
+
 int main() {
+    std::vector <int> primes;
     char buffer[BUFFER_SIZE] = {0};
     int start, end, numThreads;
     
@@ -103,6 +114,36 @@ int main() {
             ptr = strtok(NULL, ",");
             numThreads = std::stoi(ptr);
 
+            // Get the range for each thread
+            int range = end / numThreads;
+            int end_thread = start + range;
+
+            //Create threads
+            std::thread threads[numThreads];
+
+            // Create mutex for mutual exclusion
+            mutex primes_mutex;
+
+            for (int i = 0; i < numThreads; i++) {
+                threads[i] = std::thread(find_primes_range, start, end_thread, end ,std::ref(primes), std::ref(primes_mutex));
+                start = end_thread + 1;
+                end_thread = start + range;
+                cout << "%d" << end <<  std::endl;
+            }
+
+            // Join threads
+            for (int i = 0; i < numThreads; i++) {
+                threads[i].join();
+            }
+            // Print primes
+            for (int i = 0; i < primes.size(); i++)
+            {
+                cout << primes[i] <<  std::endl;
+            }
+            cout << primes.size() << " primes were found." << std::endl;
+            //Clear the array
+            primes.clear();
+
             /*
             std::cout << "Start: " << start << std::endl;
             std::cout << "End: " << end << std::endl;
@@ -131,4 +172,25 @@ int main() {
     WSACleanup();
 
     return 0;
+}
+void find_primes_range(int start, int end, int limit, vector<int> &primes, mutex &primes_mutex) {
+  for (int current_num = start; current_num <= end && current_num <= limit; current_num++) {
+    if (check_prime(current_num)) {
+      mutualExclusion(current_num, primes, primes_mutex);
+    }
+  }
+}
+
+void mutualExclusion(int current_num, vector<int> &primes, mutex &primes_mutex) {
+  lock_guard<mutex> lock(primes_mutex);
+  primes.push_back(current_num);
+}
+
+bool check_prime(const int &n) {
+  for (int i = 2; i * i <= n; i++) {
+    if (n % i == 0) {
+      return false;
+    }
+  }
+  return true;
 }
