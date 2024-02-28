@@ -3,7 +3,6 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <string>
-
 int main() {
 
     WSADATA wsaData;
@@ -52,6 +51,11 @@ int main() {
 
             send(sock, message.c_str(), message.size(),  0);
         }
+        else {
+            send(sock, temp.c_str(), temp.size(),  0);
+            break;
+        }
+
     }
     char buffer[1024] = {0};
     recv(sock, buffer,  1024,  0);

@@ -87,7 +87,10 @@ int main() {
             }
             
             std::cout << "Message from client: " << buffer << std::endl;
-
+            if (std::string(buffer) == "Exit") {
+                std::cout << "Client sent termination message" << std::endl;
+                break;
+            }
             // Split message into start, end, and num threads
             int i = 0;
             std::string temp = "";
@@ -110,14 +113,11 @@ int main() {
 
 
             // Check for termination message
-            if (std::string(buffer) == "Exit") {
-                std::cout << "Client sent termination message" << std::endl;
-                break;
-            }
+
         }
 
         // Send a message to the connected client
-        const char* message = "Hello from server!";
+        const char* message = "You have been disconnected to the server";
         send(clientSocket, message, strlen(message), 0);
 
         // Close the client socket
