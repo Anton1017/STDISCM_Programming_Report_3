@@ -2,6 +2,7 @@
 #include <iostream>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <vector>
 #include <string>
 int main() {
 
@@ -51,6 +52,22 @@ int main() {
             std::string message = startPoint + "," + endPoint + "," + numThreads;
 
             send(sock, message.c_str(), message.size(),  0);
+
+            // Receive the size of the primes vector
+            size_t primesSize;
+            recv(sock, reinterpret_cast<char*>(&primesSize), sizeof(primesSize), 0);
+
+            // Receive each element of the primes vector
+            std::vector<int> receivedPrimes(primesSize);
+            for (size_t i = 0; i < primesSize; ++i) {
+                recv(sock, reinterpret_cast<char*>(&receivedPrimes[i]), sizeof(receivedPrimes[i]), 0);
+            }
+            // Print primes
+            for (int i = 0; i < receivedPrimes.size(); i++)
+            {
+                std::cout << receivedPrimes[i] <<  std::endl;
+            }
+            std::cout << receivedPrimes.size() << " primes were found." << std::endl;
 
         }
         else {

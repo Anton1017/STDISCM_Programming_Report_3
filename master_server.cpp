@@ -128,19 +128,20 @@ int main() {
                 threads[i] = std::thread(find_primes_range, start, end_thread, end ,std::ref(primes), std::ref(primes_mutex));
                 start = end_thread + 1;
                 end_thread = start + range;
-                cout << "%d" << end <<  std::endl;
             }
 
             // Join threads
             for (int i = 0; i < numThreads; i++) {
                 threads[i].join();
             }
-            // Print primes
-            for (int i = 0; i < primes.size(); i++)
-            {
-                cout << primes[i] <<  std::endl;
+
+            // Serialize and send the size of the primes vector
+            int primesSize = primes.size();
+            send(clientSocket, reinterpret_cast<const char*>(&primesSize), sizeof(primesSize), 0);
+            // Serialize and send each element of the primes vector
+            for (int prime : primes) {
+                send(clientSocket, reinterpret_cast<const char*>(&prime), sizeof(prime), 0);
             }
-            cout << primes.size() << " primes were found." << std::endl;
             //Clear the array
             primes.clear();
 
