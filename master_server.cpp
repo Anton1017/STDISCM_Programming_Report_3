@@ -24,6 +24,8 @@ int currSlaveJobs = 0;
 
 std::vector<int> primes;
 
+int primesCount = 0;
+
 vector<SOCKET> slaveSockets;
 
 bool check_prime(const int &n);
@@ -248,7 +250,8 @@ void handleClient(SOCKET clientSocket) {
             }
 
             unique_lock<mutex> lock(slaveJobMutex);
-            primes.insert(std::end(primes), std::begin(primesMaster), std::end(primesMaster));
+            // primes.insert(std::end(primes), std::begin(primesMaster), std::end(primesMaster));
+            primesCount += primes.size();
             
             lock.unlock();
 
@@ -258,14 +261,16 @@ void handleClient(SOCKET clientSocket) {
             }
 
             // Serialize and send the size of the primes vector
-            int primesSize = primes.size();
+            int primesSize = primesCount;
             send(clientSocket, reinterpret_cast<const char*>(&primesSize), sizeof(primesSize), 0);
             // Serialize and send each element of the primes vector
-            for (int prime : primes) {
-                send(clientSocket, reinterpret_cast<const char*>(&prime), sizeof(prime), 0);
-            }
+            // for (int prime : primes) {
+            //     send(clientSocket, reinterpret_cast<const char*>(&prime), sizeof(prime), 0);
+            // }
             //Clear the array
             primes.clear();
+
+            primesCount = 0;
 
             /*
             std::cout << "Start: " << start << std::endl;
@@ -291,11 +296,12 @@ void handleSlave(SOCKET slaveSocket, mutex &slaveCountMutex, mutex &slaveJobMute
         recv(slaveSocket, reinterpret_cast<char*>(&primesSize), sizeof(primesSize), 0);
         // Receive each element of the primes vector
         std::vector<int> receivedPrimes(primesSize);
-        for (int i = 0; i < primesSize; ++i) {
-            recv(slaveSocket, reinterpret_cast<char*>(&receivedPrimes[i]), sizeof(receivedPrimes[i]), 0);
-        }
+        // for (int i = 0; i < primesSize; ++i) {
+        //     recv(slaveSocket, reinterpret_cast<char*>(&receivedPrimes[i]), sizeof(receivedPrimes[i]), 0);
+        // }
         unique_lock<mutex> lock(slaveJobMutex);
-        primes.insert(std::end(primes), std::begin(receivedPrimes), std::end(receivedPrimes));
+        // primes.insert(std::end(primes), std::begin(receivedPrimes), std::end(receivedPrimes));
+        primesCount += primesSize;
         currSlaveJobs--;
         lock.unlock();
     }
