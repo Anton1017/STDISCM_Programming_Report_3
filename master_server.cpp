@@ -220,6 +220,7 @@ void handleClient(SOCKET clientSocket) {
             int masterStart = job.first;
             int masterEnd = job.second;
             int range = (masterEnd - masterStart + 1) / numThreads;
+            int remainder = (masterEnd - masterStart + 1) % numThreads;
             int end_thread = masterStart + range;
 
             //Create threads
@@ -232,6 +233,10 @@ void handleClient(SOCKET clientSocket) {
             mutex primes_mutex;
 
             for (int i = 0; i < numThreads; i++) {
+                if(remainder > 0){
+                    end_thread++;
+                    remainder--;
+                }
                 threads[i] = std::thread(find_primes_range, masterStart, end_thread, masterEnd, std::ref(primesMaster), std::ref(primes_mutex));
                 masterStart = end_thread + 1;
                 end_thread = masterStart + range;

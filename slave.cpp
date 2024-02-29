@@ -94,6 +94,7 @@ int main() {
 
             // Get the range for each thread
             int range = (end - start + 1) / numThreads;
+            int remainder = (end - start + 1) % numThreads;
             int end_thread = start + range;
 
             //Create threads
@@ -103,6 +104,10 @@ int main() {
             std::mutex primes_mutex;
 
             for (int i = 0; i < numThreads; i++) {
+              if(remainder > 0){
+                    end_thread++;
+                    remainder--;
+                }
                 threads[i] = std::thread(find_primes_range, start, end_thread, end ,std::ref(primes), std::ref(primes_mutex));
                 start = end_thread + 1;
                 end_thread = start + range;
