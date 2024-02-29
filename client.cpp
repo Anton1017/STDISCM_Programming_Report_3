@@ -1,3 +1,4 @@
+#include <chrono>
 #include <winsock2.h>
 #include <iostream>
 #include <winsock2.h>
@@ -55,6 +56,8 @@ int main() {
             std::getline(std::cin, numThreads);
             std::string message = startPoint + "," + endPoint + "," + numThreads;
 
+            //start timer
+            auto start = std::chrono::steady_clock::now();
             send(sock, message.c_str(), message.size(),  0);
 
             // Receive the size of the primes vector
@@ -72,6 +75,11 @@ int main() {
             //     std::cout << receivedPrimes[i] <<  std::endl;
             // }
             std::cout << primesSize << " primes were found." << std::endl;
+
+            //end timer
+            auto end = std::chrono::steady_clock::now();
+            std::chrono::duration<double> elapsed_seconds = end - start;
+            std::cout << "Time elapsed: " << elapsed_seconds.count() << "s" << std::endl;
 
         }
         else {
