@@ -60,17 +60,17 @@ int main() {
             size_t primesSize;
             recv(sock, reinterpret_cast<char*>(&primesSize), sizeof(primesSize), 0);
 
-            // Receive each element of the primes vector
-            std::vector<int> receivedPrimes(primesSize);
-            for (size_t i = 0; i < primesSize; ++i) {
-                recv(sock, reinterpret_cast<char*>(&receivedPrimes[i]), sizeof(receivedPrimes[i]), 0);
-            }
-            // Print primes
-            for (int i = 0; i < receivedPrimes.size(); i++)
-            {
-                std::cout << receivedPrimes[i] <<  std::endl;
-            }
-            std::cout << receivedPrimes.size() << " primes were found." << std::endl;
+            // // Receive each element of the primes vector
+            // std::vector<int> receivedPrimes(primesSize);
+            // for (size_t i = 0; i < primesSize; ++i) {
+            //     recv(sock, reinterpret_cast<char*>(&receivedPrimes[i]), sizeof(receivedPrimes[i]), 0);
+            // }
+            // // Print primes
+            // for (int i = 0; i < receivedPrimes.size(); i++)
+            // {
+            //     std::cout << receivedPrimes[i] <<  std::endl;
+            // }
+            std::cout << primesSize << " primes were found." << std::endl;
               // End timer
             auto end_time{std::chrono::steady_clock::now()};
 
