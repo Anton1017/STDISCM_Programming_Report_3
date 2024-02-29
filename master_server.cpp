@@ -118,15 +118,6 @@ int main() {
         while (true) {
             sockaddr_in clientAddr;
             int clientAddrLen = sizeof(clientAddr);
-            SOCKET clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
-
-            if (clientSocket == INVALID_SOCKET) {
-                std::cerr << "Error accepting connection\n";
-                continue;
-            }
-
-            char buffer[BUFFER_SIZE] = {0};
-            recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
 
             std::cout << "Received task from client: " << buffer << std::endl;
 
@@ -169,6 +160,16 @@ int main() {
             // Create mutex for mutual exclusion
             mutex primes_mutex;
 
+            SOCKET clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
+
+            if (clientSocket == INVALID_SOCKET) {
+                std::cerr << "Error accepting connection\n";
+                continue;
+            }
+
+            char buffer[BUFFER_SIZE] = {0};
+            recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
+
             for (int i = 0; i < numThreads; i++) {
                 threads[i] = std::thread(find_primes_range, start, end_thread, end ,std::ref(primes), std::ref(primes_mutex));
                 start = end_thread + 1;
@@ -181,13 +182,13 @@ int main() {
             }
 
             // Serialize and send the size of the primes vector
-            int primesSize = primes.size();
-            send(clientSocket, reinterpret_cast<const char*>(&primesSize), sizeof(primesSize), 0);
+            // int primesSize = primes.size();
+            // send(clientSocket, reinterpret_cast<const char*>(&primesSize), sizeof(primesSize), 0);
             
             // Serialize and send each element of the primes vector
-            for (int prime : primes) {
-                send(clientSocket, reinterpret_cast<const char*>(&prime), sizeof(prime), 0);
-            }
+            // for (int prime : primes) {
+            //     send(clientSocket, reinterpret_cast<const char*>(&prime), sizeof(prime), 0);
+            // }
 
             //Clear the array
             primes.clear();
@@ -202,7 +203,6 @@ int main() {
                 send(clientSocket, resultBuffer, strlen(resultBuffer), 0);
                 closesocket(slaveSock);
             }
-
         }
 
         // Send a message to the connected client
