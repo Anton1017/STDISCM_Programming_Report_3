@@ -7,11 +7,12 @@
 #include <mutex>
 #include <vector>
 #include <algorithm>
+#include <future>
 #pragma comment(lib, "ws2_32.lib")
 using namespace std;
 const int PORT = 6900;
 const int BUFFER_SIZE = 1024;
-const char* SERVER_ADDRESS = "172.24.198.250";
+const char* SERVER_ADDRESS = "172.24.169.169";
 
 // for locking when adding/removing slave socket from vector
 mutex slaveCountMutex;
@@ -226,28 +227,34 @@ void handleClient(SOCKET clientSocket) {
             int end_thread = masterStart + range;
 
             //Create threads
-            std::thread threads[numThreads];
+            //std::thread threads[numThreads];
+            std::vector<std::future<void>> futures;
 
             // Vector for temporary storage of master prime computations
             std::vector<int> primesMaster;
 
             // Create mutex for mutual exclusion
             mutex primes_mutex;
-
+            
             for (int i = 0; i < numThreads; i++) {
                 if(remainder > 0){
                     end_thread++;
                     remainder--;
                 }
-                threads[i] = std::thread(find_primes_range, masterStart, end_thread, masterEnd, std::ref(primesMaster), std::ref(primes_mutex));
+                //threads[i] = std::thread(find_primes_range, masterStart, end_thread, masterEnd, std::ref(primesMaster), std::ref(primes_mutex));
+                futures.push_back(std::async(std::launch::async, find_primes_range, masterStart, end_thread, masterEnd, std::ref(primesMaster), std::ref(primes_mutex)));
                 masterStart = end_thread + 1;
                 end_thread = masterStart + range;
             }
 
-            // Join threads
-            for (int i = 0; i < numThreads; i++) {
-                threads[i].join();
+            for(auto &f : futures) {
+                f.get();
             }
+
+            // Join threads
+            // for (int i = 0; i < numThreads; i++) {
+            //     threads[i].join();
+            // }
 
             unique_lock<mutex> lock(slaveJobMutex);
             // primes.insert(std::end(primes), std::begin(primesMaster), std::end(primesMaster));

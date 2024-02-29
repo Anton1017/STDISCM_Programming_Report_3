@@ -7,6 +7,7 @@
 #include <mutex>
 #include <chrono>
 #include <thread>
+#include <future>
 
 const int PORT = 6900;
 const int BUFFER_SIZE = 1024;
@@ -98,7 +99,8 @@ int main() {
             int end_thread = start + range;
 
             //Create threads
-            std::thread threads[numThreads];
+            //std::thread threads[numThreads];
+            std::vector<std::future<void>> futures;
 
             // Create mutex for mutual exclusion
             std::mutex primes_mutex;
@@ -108,15 +110,20 @@ int main() {
                     end_thread++;
                     remainder--;
                 }
-                threads[i] = std::thread(find_primes_range, start, end_thread, end ,std::ref(primes), std::ref(primes_mutex));
+                //threads[i] = std::thread(find_primes_range, start, end_thread, end ,std::ref(primes), std::ref(primes_mutex));
+                futures.push_back(std::async(std::launch::async, find_primes_range, start, end_thread, end, std::ref(primes), std::ref(primes_mutex)));
                 start = end_thread + 1;
                 end_thread = start + range;
             }
 
-            // Join threads
-            for (int i = 0; i < numThreads; i++) {
-                threads[i].join();
+            for(auto &f : futures) {
+                f.get();
             }
+
+            // Join threads
+            // for (int i = 0; i < numThreads; i++) {
+            //     threads[i].join();
+            // }
 
             // Serialize and send the size of the primes vector
             int primesSize = primes.size();
