@@ -10,7 +10,7 @@
 
 const int PORT = 6900;
 const int BUFFER_SIZE = 1024;
-const char* SERVER_ADDRESS = "127.0.0.3";
+const char* SERVER_ADDRESS = "172.24.198.250";
 
 bool check_prime(const int &n);
 
