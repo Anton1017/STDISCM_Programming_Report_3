@@ -5,8 +5,6 @@
 #include <vector>
 #include <string>
 #include <chrono>
-#include <sstream>
-std::vector<int> deserializePrimes(const std::string& serializedPrimes);
 int main() {
 
     WSADATA wsaData;
@@ -59,24 +57,20 @@ int main() {
             send(sock, message.c_str(), message.size(),  0);
 
             // Receive the size of the primes vector
-            int primesSize;
+            size_t primesSize;
             recv(sock, reinterpret_cast<char*>(&primesSize), sizeof(primesSize), 0);
 
             // Receive each element of the primes vector
-            int bytesReceived = recv(sock, buffer, 1024 - 1, 0);
-            if (bytesReceived > 0) {
-                buffer[bytesReceived] = '\0'; // Ensure null-termination
-                std::string serializedPrimes(buffer);
-                std::vector<int> primes = deserializePrimes(serializedPrimes);
-                // Now primes contains the list of primes
-                for (int i = 0; i < primes.size(); i++)
-                {
-                    std::cout << primes[i] <<  std::endl;
-                }
-                std::cout << primes.size() << " primes were found." << std::endl;
+            std::vector<int> receivedPrimes(primesSize);
+            for (size_t i = 0; i < primesSize; ++i) {
+                recv(sock, reinterpret_cast<char*>(&receivedPrimes[i]), sizeof(receivedPrimes[i]), 0);
             }
-            //Print primes 
-
+            // Print primes
+            for (int i = 0; i < receivedPrimes.size(); i++)
+            {
+                std::cout << receivedPrimes[i] <<  std::endl;
+            }
+            std::cout << receivedPrimes.size() << " primes were found." << std::endl;
               // End timer
             auto end_time{std::chrono::steady_clock::now()};
 
@@ -90,21 +84,11 @@ int main() {
         }
 
     }
-    // recv(sock, buffer,  1024,  0);
-    // std::cout << "Server: " << buffer << std::endl;
+    recv(sock, buffer,  1024,  0);
+    std::cout << "Server: " << buffer << std::endl;
 
     closesocket(sock);
     WSACleanup();
 
     return 0;
-}
-
-std::vector<int> deserializePrimes(const std::string& serializedPrimes) {
-    std::vector<int> primes;
-    std::stringstream ss(serializedPrimes);
-    std::string item;
-    while (std::getline(ss, item, ',')) {
-        primes.push_back(std::stoi(item));
-    }
-    return primes;
 }
