@@ -30,6 +30,8 @@ void handleClient(SOCKET clientSocket);
 
 void handleSlave(SOCKET slaveSocket, mutex &slaveCountMutex);
 
+std::vector<std::pair<int,int>> getJobList(int start, int end, int numWorkers);
+
 int main() {
     std::vector <int> primes;
     char buffer[BUFFER_SIZE] = {0};
@@ -368,4 +370,35 @@ bool check_prime(const int &n) {
     }
   }
   return true;
+}
+
+std::vector<std::pair<int,int>> getJobList(int start, int end, int numWorkers) {
+    // Write C++ code here
+    int size = end - start + 1;
+    std::vector<std::pair<int,int>> jobList;
+
+    int jobChunk = size / numWorkers;
+    int i = start;
+    int j = start;
+    int jobRemainder = size % numWorkers;
+        while(size != 0){
+            if(size - jobChunk > 0){
+                j += jobChunk - 1;
+                if(jobRemainder > 0){
+                    ++j;
+                    --jobRemainder;
+                    --size;
+                }
+                jobList.push_back(std::pair(i,j));
+                size -= jobChunk;
+                i = j + 1;
+                ++j;
+            }else{
+                j += size - 1;
+                jobList.push_back(std::pair(i,j));
+                size = 0;
+            }
+        }
+    
+    return jobList;
 }
