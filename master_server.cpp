@@ -251,7 +251,7 @@ void handleClient(SOCKET clientSocket) {
 
             unique_lock<mutex> lock(slaveJobMutex);
             // primes.insert(std::end(primes), std::begin(primesMaster), std::end(primesMaster));
-            primesCount += primes.size();
+            primesCount += primesMaster.size();
             
             lock.unlock();
 
