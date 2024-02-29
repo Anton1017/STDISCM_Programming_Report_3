@@ -12,7 +12,7 @@ const int PORT = 6900;
 const int BUFFER_SIZE = 1024;
 const char* SERVER_ADDRESS = "127.0.0.1";
 const char* SLAVE_SERVER_ADDRESS = "127.0.0.1";
-const int SLAVE_SERVER_PORT = 6901;
+const int SLAVE_SERVER_PORT = 6900;
 
 bool check_prime(const int &n);
 
@@ -185,18 +185,12 @@ int main() {
             send(clientSocket, reinterpret_cast<const char*>(&primesSize), sizeof(primesSize), 0);
             
             // Serialize and send each element of the primes vector
-            // for (int prime : primes) {
-            //     send(clientSocket, reinterpret_cast<const char*>(&prime), sizeof(prime), 0);
-            // }
+            for (int prime : primes) {
+                send(clientSocket, reinterpret_cast<const char*>(&prime), sizeof(prime), 0);
+            }
 
             //Clear the array
             primes.clear();
-
-            /*
-            std::cout << "Start: " << start << std::endl;
-            std::cout << "End: " << end << std::endl;
-            std::cout << "Num Threads: " << numThreads << std::endl;
-            */
 
             // Send to slave process
             SOCKET slaveSock = createSlaveSocket(SLAVE_SERVER_ADDRESS, SLAVE_SERVER_PORT);
@@ -208,8 +202,6 @@ int main() {
                 send(clientSocket, resultBuffer, strlen(resultBuffer), 0);
                 closesocket(slaveSock);
             }
-
-            // Check for termination message
 
         }
 

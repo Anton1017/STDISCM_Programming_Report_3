@@ -63,6 +63,7 @@ int main() {
     // Serialize and send the size of the primes vector
     int primesSize = primes.size();
     send(slaveSock, reinterpret_cast<const char*>(&primesSize), sizeof(primesSize), 0);
+    
     // Serialize and send each element of the primes vector
     for (int prime : primes) {
         send(slaveSock, reinterpret_cast<const char*>(&prime), sizeof(prime), 0);
