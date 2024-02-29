@@ -28,7 +28,7 @@ void acceptClients(SOCKET serverSocket);
 
 void handleClient(SOCKET clientSocket);
 
-void handleSlave(SOCKET slaveSocket, mutex slaveCountMutex);
+void handleSlave(SOCKET slaveSocket, mutex &slaveCountMutex);
 
 int main() {
     std::vector <int> primes;
@@ -233,7 +233,7 @@ void acceptClients(SOCKET serverSocket) {
             clientThread.detach();  // Detach the thread to allow it to run independently
         }else if(strcmp(buffer, "slave") == 0){
             std::cout << "Accepted slave connection from: " << inet_ntoa(clientAddr.sin_addr) << ":" << ntohs(clientAddr.sin_port) << std::endl;
-            std::thread slaveThread(handleSlave, clientSocket, slaveCountMutex);
+            std::thread slaveThread(handleSlave, clientSocket, std::ref(slaveCountMutex));
             slaveThread.detach();
             unique_lock<mutex> lock(slaveCountMutex);
             slaveSockets.push_back(clientSocket);
@@ -335,7 +335,7 @@ void handleClient(SOCKET clientSocket) {
     closesocket(clientSocket);
 }
 
-void handleSlave(SOCKET slaveSocket, mutex slaveCountMutex){
+void handleSlave(SOCKET slaveSocket, mutex &slaveCountMutex){
 
     while(true){
         
