@@ -18,6 +18,7 @@ void find_primes_range(int start, int end, int limit, std::vector<int> &primes, 
 
 void mutualExclusion(int current_num, vector<int> &primes, mutex &primes_mutex);
 
+std::string serializePrimes(const std::vector<int>& primes);
 
 int main() {
     std::vector <int> primes;
@@ -134,15 +135,14 @@ int main() {
             for (int i = 0; i < numThreads; i++) {
                 threads[i].join();
             }
-
-            // Serialize and send the size of the primes vector
             int primesSize = primes.size();
             send(clientSocket, reinterpret_cast<const char*>(&primesSize), sizeof(primesSize), 0);
-            // Serialize and send each element of the primes vector
-            for (int prime : primes) {
-                send(clientSocket, reinterpret_cast<const char*>(&prime), sizeof(prime), 0);
-            }
-            //Clear the array
+
+            std::string serializedPrimes = serializePrimes(primes);
+            send(clientSocket, serializedPrimes.c_str(), serializedPrimes.size(), 0);
+
+            //Clear the array and serialized array
+            serializedPrimes.clear();
             primes.clear();
 
             /*
@@ -196,4 +196,16 @@ bool check_prime(const int &n) {
     }
   }
   return true;
+}
+
+std::string serializePrimes(const std::vector<int>& primes) {
+    std::string serializedPrimes;
+    for (const auto& prime : primes) {
+        serializedPrimes += std::to_string(prime) + ",";
+    }
+    // Remove the trailing comma
+    if (!serializedPrimes.empty()) {
+        serializedPrimes.pop_back();
+    }
+    return serializedPrimes;
 }
