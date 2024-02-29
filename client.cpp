@@ -4,6 +4,7 @@
 #include <ws2tcpip.h>
 #include <vector>
 #include <string>
+#include <chrono>
 int main() {
 
     WSADATA wsaData;
@@ -51,6 +52,8 @@ int main() {
             std::getline(std::cin, numThreads);
             std::string message = startPoint + "," + endPoint + "," + numThreads;
 
+            // Start timer
+            auto start_time{std::chrono::steady_clock::now()};
             send(sock, message.c_str(), message.size(),  0);
 
             // Receive the size of the primes vector
@@ -68,6 +71,11 @@ int main() {
                 std::cout << receivedPrimes[i] <<  std::endl;
             }
             std::cout << receivedPrimes.size() << " primes were found." << std::endl;
+              // End timer
+            auto end_time{std::chrono::steady_clock::now()};
+
+            std::chrono::duration<double> elapsed{end_time - start_time};
+            std::cout << "Time: " << elapsed.count() << "s\n";
 
         }
         else {
