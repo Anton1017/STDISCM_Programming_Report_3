@@ -10,7 +10,7 @@
 
 const int PORT = 6900;
 const int BUFFER_SIZE = 1024;
-const char* SERVER_ADDRESS = "127.0.0.1";
+const char* SERVER_ADDRESS = "127.0.0.3";
 
 bool check_prime(const int &n);
 
@@ -20,6 +20,8 @@ void mutualExclusion(int current_num, std::vector<int> &primes, std::mutex &prim
 
 int main() {
     std::vector <int> primes;
+    char buffer[1024] = {0};
+    int start, end, numThreads;
 
     WSADATA wsaData;
     int result = WSAStartup(MAKEWORD(2,  2), &wsaData);
@@ -52,84 +54,83 @@ int main() {
     send(slaveSock, slave.c_str(), slave.size(),  0);
 
     // Receive message from master
-    char buffer[1024] = {0};
     recv(slaveSock, buffer,  1024,  0);
     std::cout << "Server: " << buffer << std::endl;
 
     // Perform prime checking
     // Handle client message
-    // while (true) {
-    //     memset(buffer,  0, sizeof(buffer));
-    //     int valread = recv(clientSocket, buffer, sizeof(buffer) -  1,  0);
-    //     if (valread ==  0) {
-    //         std::cout << "Client disconnected" << std::endl;
-    //         break;
-    //     } else if (valread <  0) {
-    //         std::cerr << "Recv failed: " << WSAGetLastError() << std::endl;
-    //         closesocket(clientSocket);
-    //         WSACleanup();
-    //         break;
-    //     }
+    while (true) {
+        memset(buffer,  0, sizeof(buffer));
+        int valread = recv(slaveSock, buffer, sizeof(buffer) -  1,  0);
+        if (valread ==  0) {
+            std::cout << "Client disconnected" << std::endl;
+            break;
+        } else if (valread <  0) {
+            std::cerr << "Recv failed: " << WSAGetLastError() << std::endl;
+            closesocket(slaveSock);
+            WSACleanup();
+            break;
+        }
         
-    //     std::cout << "Message from client: " << buffer << std::endl;
+        std::cout << "Message from client: " << buffer << std::endl;
 
-    //     // Send to slave process
+        // Send to slave process
 
-    //     // Check for termination message
-    //     if (std::string(buffer) == "Exit") {
-    //         std::cout << "Client sent termination message" << std::endl;
-    //         break;
-    //     }else{
-    //         int i = 0;
-    //         std::string temp = "";
+        // Check for termination message
+        if (std::string(buffer) == "Exit") {
+            std::cout << "Client sent termination message" << std::endl;
+            break;
+        }else{
+            int i = 0;
+            std::string temp = "";
             
-    //         char* ptr;
-    //         ptr = strtok(buffer, ",");
-    //         start = std::stoi(ptr);
-    //         ptr = strtok(NULL, ",");
-    //         end = std::stoi(ptr);
-    //         ptr = strtok(NULL, ",");
-    //         numThreads = std::stoi(ptr);
+            char* ptr;
+            ptr = strtok(buffer, ",");
+            start = std::stoi(ptr);
+            ptr = strtok(NULL, ",");
+            end = std::stoi(ptr);
+            ptr = strtok(NULL, ",");
+            numThreads = std::stoi(ptr);
 
-    //         // Get the range for each thread
-    //         int range = end / numThreads;
-    //         int end_thread = start + range;
+            // Get the range for each thread
+            int range = (end - start + 1) / numThreads;
+            int end_thread = start + range;
 
-    //         //Create threads
-    //         std::thread threads[numThreads];
+            //Create threads
+            std::thread threads[numThreads];
 
-    //         // Create mutex for mutual exclusion
-    //         mutex primes_mutex;
+            // Create mutex for mutual exclusion
+            std::mutex primes_mutex;
 
-    //         for (int i = 0; i < numThreads; i++) {
-    //             threads[i] = std::thread(find_primes_range, start, end_thread, end ,std::ref(primes), std::ref(primes_mutex));
-    //             start = end_thread + 1;
-    //             end_thread = start + range;
-    //         }
+            for (int i = 0; i < numThreads; i++) {
+                threads[i] = std::thread(find_primes_range, start, end_thread, end ,std::ref(primes), std::ref(primes_mutex));
+                start = end_thread + 1;
+                end_thread = start + range;
+            }
 
-    //         // Join threads
-    //         for (int i = 0; i < numThreads; i++) {
-    //             threads[i].join();
-    //         }
+            // Join threads
+            for (int i = 0; i < numThreads; i++) {
+                threads[i].join();
+            }
 
-    //         // Serialize and send the size of the primes vector
-    //         int primesSize = primes.size();
-    //         send(clientSocket, reinterpret_cast<const char*>(&primesSize), sizeof(primesSize), 0);
-    //         // Serialize and send each element of the primes vector
-    //         for (int prime : primes) {
-    //             send(clientSocket, reinterpret_cast<const char*>(&prime), sizeof(prime), 0);
-    //         }
-    //         //Clear the array
-    //         primes.clear();
+            // Serialize and send the size of the primes vector
+            int primesSize = primes.size();
+            send(slaveSock, reinterpret_cast<const char*>(&primesSize), sizeof(primesSize), 0);
+            // Serialize and send each element of the primes vector
+            for (int prime : primes) {
+                send(slaveSock, reinterpret_cast<const char*>(&prime), sizeof(prime), 0);
+            }
+            //Clear the array
+            primes.clear();
 
-    //         /*
-    //         std::cout << "Start: " << start << std::endl;
-    //         std::cout << "End: " << end << std::endl;
-    //         std::cout << "Num Threads: " << numThreads << std::endl;
-    //         */
+            /*
+            std::cout << "Start: " << start << std::endl;
+            std::cout << "End: " << end << std::endl;
+            std::cout << "Num Threads: " << numThreads << std::endl;
+            */
 
-    //     }
-    // }
+        }
+    }
 
 
 
@@ -153,6 +154,7 @@ void mutualExclusion(int current_num, std::vector<int> &primes, std::mutex &prim
 }
 
 bool check_prime(const int &n) {
+  if (n < 2) return false;
   for (int i = 2; i * i <= n; i++) {
     if (n % i == 0) {
       return false;
