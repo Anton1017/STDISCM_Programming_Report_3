@@ -188,6 +188,8 @@ void mutualExclusion(int current_num, vector<int> &primes, mutex &primes_mutex) 
 }
 
 bool check_prime(const int &n) {
+  // Special case for 1
+  if (n < 2) return false;
   for (int i = 2; i * i <= n; i++) {
     if (n % i == 0) {
       return false;
