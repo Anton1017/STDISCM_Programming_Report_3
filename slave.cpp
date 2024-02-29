@@ -52,7 +52,21 @@ int main() {
     recv(slaveSock, buffer,  1024,  0);
     std::cout << "Server: " << buffer << std::endl;
 
+    // Parse the received message to get start, end, and numThreads
+    int start, end, numThreads;
+    sscanf(buffer, "%d,%d,%d", &start, &end, &numThreads);
+
     // Perform prime checking
+    std::mutex primes_mutex;
+    find_primes_range(start, end, end, primes, primes_mutex);
+
+    // Serialize and send the size of the primes vector
+    int primesSize = primes.size();
+    send(slaveSock, reinterpret_cast<const char*>(&primesSize), sizeof(primesSize), 0);
+    // Serialize and send each element of the primes vector
+    for (int prime : primes) {
+        send(slaveSock, reinterpret_cast<const char*>(&prime), sizeof(prime), 0);
+    }
 
     closesocket(slaveSock);
     WSACleanup();
@@ -61,23 +75,23 @@ int main() {
 }
 
 void find_primes_range(int start, int end, int limit, std::vector<int> &primes, std::mutex &primes_mutex) {
-  for (int current_num = start; current_num <= end && current_num <= limit; current_num++) {
-    if (check_prime(current_num)) {
-      mutualExclusion(current_num, primes, primes_mutex);
+    for (int current_num = start; current_num <= end && current_num <= limit; current_num++) {
+        if (check_prime(current_num)) {
+            mutualExclusion(current_num, primes, primes_mutex);
+        }
     }
-  }
 }
 
 void mutualExclusion(int current_num, std::vector<int> &primes, std::mutex &primes_mutex) {
-  std::lock_guard<std::mutex> lock(primes_mutex);
-  primes.push_back(current_num);
+    std::lock_guard<std::mutex> lock(primes_mutex);
+    primes.push_back(current_num);
 }
 
 bool check_prime(const int &n) {
-  for (int i = 2; i * i <= n; i++) {
-    if (n % i == 0) {
-      return false;
+    for (int i = 2; i * i <= n; i++) {
+        if (n % i == 0) {
+            return false;
+        }
     }
-  }
-  return true;
+    return true;
 }
