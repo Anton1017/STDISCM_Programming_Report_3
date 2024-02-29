@@ -8,7 +8,7 @@
 #include <chrono>
 #include <thread>
 
-const int PORT = 6900;
+const int PORT = 6901;
 const int BUFFER_SIZE = 1024;
 const char* SERVER_ADDRESS = "127.0.0.1";
 

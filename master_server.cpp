@@ -11,6 +11,8 @@ using namespace std;
 const int PORT = 6900;
 const int BUFFER_SIZE = 1024;
 const char* SERVER_ADDRESS = "127.0.0.1";
+const char* SLAVE_SERVER_ADDRESS = "127.0.0.1";
+const int SLAVE_SERVER_PORT = 6901;
 
 bool check_prime(const int &n);
 
@@ -18,6 +20,31 @@ void find_primes_range(int start, int end, int limit, std::vector<int> &primes, 
 
 void mutualExclusion(int current_num, vector<int> &primes, mutex &primes_mutex);
 
+SOCKET createSlaveSocket(const char* slaveAddress, int port) {
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(2, 2), &wsaData);
+
+    SOCKET slaveSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (slaveSock == INVALID_SOCKET) {
+        std::cerr << "Socket creation failed: " << WSAGetLastError() << std::endl;
+        WSACleanup();
+        return INVALID_SOCKET;
+    }
+
+    sockaddr_in slaveAddr;
+    slaveAddr.sin_family = AF_INET;
+    slaveAddr.sin_port = htons(port);
+    slaveAddr.sin_addr.S_un.S_addr = inet_addr(slaveAddress);
+
+    if (connect(slaveSock, (SOCKADDR*)&slaveAddr, sizeof(slaveAddr)) == SOCKET_ERROR) {
+        std::cerr << "Connection to slave failed: " << WSAGetLastError() << std::endl;
+        closesocket(slaveSock);
+        WSACleanup();
+        return INVALID_SOCKET;
+    }
+
+    return slaveSock;
+}
 
 int main() {
     std::vector <int> primes;
@@ -26,6 +53,7 @@ int main() {
     
     // Initialize Winsock
     WSADATA wsaData;
+    WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
         std::cerr << "Failed to initialize Winsock\n";
         return -1;
@@ -41,6 +69,9 @@ int main() {
 
     // Configure server address
     sockaddr_in serverAddr;
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(PORT);
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
     if (inet_pton(AF_INET, SERVER_ADDRESS, &(serverAddr.sin_addr.S_un.S_addr)) <=  0) {
         std::cerr << "inet_pton failed: " << WSAGetLastError() << std::endl;
         closesocket(serverSocket);
@@ -85,6 +116,20 @@ int main() {
 
         // Handle client message
         while (true) {
+            sockaddr_in clientAddr;
+            int clientAddrLen = sizeof(clientAddr);
+            SOCKET clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
+
+            if (clientSocket == INVALID_SOCKET) {
+                std::cerr << "Error accepting connection\n";
+                continue;
+            }
+
+            char buffer[BUFFER_SIZE] = {0};
+            recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
+
+            std::cout << "Received task from client: " << buffer << std::endl;
+
             memset(buffer,  0, sizeof(buffer));
             int valread = recv(clientSocket, buffer, sizeof(buffer) -  1,  0);
             if (valread ==  0) {
@@ -154,7 +199,15 @@ int main() {
             */
 
             // Send to slave process
-
+            SOCKET slaveSock = createSlaveSocket(SLAVE_SERVER_ADDRESS, SLAVE_SERVER_PORT);
+            if (slaveSock != INVALID_SOCKET) {
+                send(slaveSock, buffer, strlen(buffer), 0);
+                // Receive results from slave server and send back to client
+                char resultBuffer[BUFFER_SIZE] = {0};
+                recv(slaveSock, resultBuffer, sizeof(resultBuffer) - 1, 0);
+                send(clientSocket, resultBuffer, strlen(resultBuffer), 0);
+                closesocket(slaveSock);
+            }
 
             // Check for termination message
 
