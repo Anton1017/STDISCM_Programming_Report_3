@@ -1,3 +1,4 @@
+#include <chrono>
 #include <winsock2.h>
 #include <iostream>
 #include <winsock2.h>
@@ -24,7 +25,7 @@ int main() {
     sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(6900); // Port number
-    serverAddress.sin_addr.S_un.S_addr = inet_addr("127.0.0.1"); // IP address
+    serverAddress.sin_addr.S_un.S_addr = inet_addr("172.24.198.250"); // IP address
 
     if (connect(sock, (SOCKADDR*)&serverAddress, sizeof(serverAddress)) == SOCKET_ERROR) {
         std::cerr << "Connection failed: " << WSAGetLastError() << std::endl;
@@ -32,6 +33,10 @@ int main() {
         WSACleanup();
         return 1;
     }
+
+    //Send identifier as client
+    std::string client = "client";
+    send(sock, client.c_str(), client.size(),  0);
 
     //User input
     std::string temp;
@@ -52,12 +57,17 @@ int main() {
             std::getline(std::cin, numThreads);
             std::string message = startPoint + "," + endPoint + "," + numThreads;
 
+<<<<<<< HEAD
             // Start timer
             auto start_time{std::chrono::steady_clock::now()};
+=======
+            //start timer
+            auto start = std::chrono::steady_clock::now();
+>>>>>>> slave_branch
             send(sock, message.c_str(), message.size(),  0);
 
             // Receive the size of the primes vector
-            size_t primesSize;
+            int primesSize;
             recv(sock, reinterpret_cast<char*>(&primesSize), sizeof(primesSize), 0);
 
             // // Receive each element of the primes vector
@@ -71,11 +81,19 @@ int main() {
             //     std::cout << receivedPrimes[i] <<  std::endl;
             // }
             std::cout << primesSize << " primes were found." << std::endl;
+<<<<<<< HEAD
               // End timer
             auto end_time{std::chrono::steady_clock::now()};
 
             std::chrono::duration<double> elapsed{end_time - start_time};
             std::cout << "Time: " << elapsed.count() << "s\n";
+=======
+
+            //end timer
+            auto end = std::chrono::steady_clock::now();
+            std::chrono::duration<double> elapsed_seconds = end - start;
+            std::cout << "Time elapsed: " << elapsed_seconds.count() << "s" << std::endl;
+>>>>>>> slave_branch
 
         }
         else {
